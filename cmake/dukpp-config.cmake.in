@@ -1,0 +1,19 @@
+@PACKAGE_INIT@
+
+include("${CMAKE_CURRENT_LIST_DIR}/dukpp-targets.cmake")
+
+MESSAGE(STATUS ${CMAKE_CURRENT_LIST_DIR})
+
+if (TARGET dukpp)
+    get_target_property(DUKPP_INCLUDE_DIRS
+        dukpp INTERFACE_INCLUDE_DIRECTORIES)
+    set_and_check(DUKPP_INCLUDE_DIRS "${DUKPP_INCLUDE_DIRS}")
+    set(DUKPP_LIBRARIES dukpp)
+endif()
+
+#if(TARGET dukpp_single)
+#    get_target_property(DUKPP_SINGLE_INCLUDE_DIRS
+#        dukpp_single INTERFACE_INCLUDE_DIRECTORIES)
+#    set_and_check(DUKPP_INCLUDE_DIRS "${DUKPP_SINGLE_INCLUDE_DIRS}")
+#    set(DUKPP_LIBRARIES_SINGLE dukpp_single)
+#endif()
