@@ -196,7 +196,8 @@ namespace dukpp {
         template<typename T = duk_value>
         std::vector<T> as_array() const;
 
-        std::map<std::string, duk_value> as_map() const;
+        template<typename T = duk_value>
+        std::map<std::string, T> as_map() const;
 
         inline Type type() const {
             return mType;

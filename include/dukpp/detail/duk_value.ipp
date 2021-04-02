@@ -209,7 +209,7 @@ namespace dukpp {
         for (duk_size_t i = 0; i < len; i++) {
             duk_get_prop_index(mContext, -1, i);
             vec.push_back(types::DukType<typename types::Bare<T>::type>
-                          ::template read<duk_value>(mContext, elem_idx));
+                          ::template read<T>(mContext, elem_idx));
             duk_pop(mContext);
         }
 
@@ -218,8 +218,9 @@ namespace dukpp {
         return vec;
     }
 
-    std::map<std::string, duk_value> duk_value::as_map() const {
-        std::map<std::string, duk_value> map;
+    template<typename T>
+    std::map<std::string, T> duk_value::as_map() const {
+        std::map<std::string, T> map;
 
         if (mType != Type::Object) {
             throw duk_exception() << "Expected array, got " << type_name();
@@ -236,8 +237,8 @@ namespace dukpp {
 
         duk_enum(mContext, -1, DUK_ENUM_OWN_PROPERTIES_ONLY);
         while (duk_next(mContext, -1, 1)) {
-            map[duk_safe_to_string(mContext, -2)] = types::DukType<typename types::Bare<duk_value>::type>
-            ::template read<duk_value>(mContext, -1);
+            map[duk_safe_to_string(mContext, -2)] = types::DukType<typename types::Bare<T>::type>
+            ::template read<T>(mContext, -1);
             duk_pop_2(mContext);
         }
 
