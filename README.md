@@ -12,6 +12,7 @@ Features:
 * No external dependencies
 * Support for ``std::optional``
 * Variadic arguments
+* Function registering via indexing operator: ``ctx["a"]["b"]["c"] = &func``
 * Access to the Duktape context from C++ code
 
 Documentation
