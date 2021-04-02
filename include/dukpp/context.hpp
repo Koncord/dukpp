@@ -4,7 +4,7 @@
 #include <vector>
 #include <fstream>
 #include <type_traits>
-#include <boost/function_types/result_type.hpp>
+//#include <boost/function_types/result_type.hpp>
 
 #include <duktape.h>
 
@@ -36,7 +36,7 @@ namespace dukpp {
 
             // Register a function.
 
-            template<typename T>
+            /*template<typename T>
             auto operator=(T const &funcToCall) -> std::void_t<decltype(&T::operator())> {
                 // TODO: need more smart logic to provide this_context
                 //typedef typename boost::function_types::result_type<T>::type RetType;
@@ -45,14 +45,13 @@ namespace dukpp {
                 //std::cout << typeid(typename std::result_of_t<T&(...)>).name() << std::endl;
                 //auto evalFunc = detail::FuncInfoHolder<RetType, Ts...>::FuncRuntime::call_native_function;
                 //mCtx->actually_register_global_function<true>(idx.data(), evalFunc, funcToCall);
+            }*/
 
-            }
-
-            /*template<typename RetType, typename... Ts>
+            template<typename RetType, typename... Ts>
             proxy &operator=(RetType (*funcToCall)(Ts...)) {
                 // TODO: need more smart logic to provide this_context
                 auto evalFunc = detail::FuncInfoHolder<RetType, Ts...>::FuncRuntime::call_native_function;
-                mCtx->actually_register_global_function<true>(idx.data(), evalFunc, funcToCall);
+                mCtx->actually_register_global_function<false>(idx.data(), evalFunc, funcToCall);
                 return *this;
             }
 
@@ -62,7 +61,7 @@ namespace dukpp {
                 auto evalFunc = detail::FuncInfoHolder<RetType, Ts...>::FuncRuntime::call_native_ctx_function;
                 mCtx->actually_register_global_function<true>(idx.data(), evalFunc, funcToCall);
                 return *this;
-            }*/
+            }
 
 
             // register a global object
@@ -73,6 +72,14 @@ namespace dukpp {
                 mCtx->push(obj);
                 duk_put_global_string(mCtx->get_duk_context(), idx.data());
                 return *this;
+            }
+
+            proxy operator[](std::string_view idx) {
+                if (!duk_has_prop_string(mCtx->mCtx, -1, this->idx.c_str()))
+                    duk_put_prop_string(mCtx->mCtx, -1, this->idx.c_str());
+                else
+                    duk_get_prop_string(mCtx->mCtx, -1, this->idx.c_str());
+                return proxy(mCtx, idx);
             }
         };
 
@@ -89,6 +96,7 @@ namespace dukpp {
         }
 
         proxy operator[](std::string_view idx) {
+            duk_push_global_object(mCtx);
             return proxy(this, idx);
         }
 
@@ -146,11 +154,21 @@ namespace dukpp {
             duk_eval_string(mCtx, code.data());
         }
 
-        template<typename... Ts>
-        void call(std::string const &fn, Ts ...args) const {
+        template<typename RetT = void, typename... Ts>
+        typename std::enable_if<std::is_void<RetT>::value, RetT>::type call(std::string const &fn, Ts ...args) const {
             duk_get_global_string(mCtx, fn.data());
             push(args...);
             duk_call(mCtx, sizeof...(args));
+        }
+
+        template<typename RetT, typename... Ts>
+        typename std::enable_if<!std::is_void<RetT>::value, RetT>::type call(std::string const &fn, Ts ...args) const {
+            int prev_top = duk_get_top(mCtx);
+            call(fn, args...);
+            auto val = read<RetT>();
+            int cur_top = duk_get_top(mCtx);
+            duk_pop_n(mCtx, cur_top - prev_top);
+            return val;
         }
 
         [[nodiscard]] duk_value copy_value_from_stack(duk_idx_t idx = -1) const {
@@ -238,7 +256,7 @@ namespace dukpp {
             duk_push_pointer(mCtx, reinterpret_cast<void *>(funcToCall));
             duk_put_prop_string(mCtx, -2, DUK_HIDDEN_SYMBOL("func_ptr"));
 
-            duk_put_global_string(mCtx, name);
+            duk_put_prop_string(mCtx, -2, name);
         }
     };
 
