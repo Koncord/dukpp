@@ -7,7 +7,7 @@ option(DUKPP_ENABLE_INSTALL "Enable installation" ON)
 
 set(CMAKE_CXX_STANDARD 17)
 
-set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
+set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
 find_package(Duktape REQUIRED)
 find_package(Threads REQUIRED)
 include(CMakePackageConfigHelpers)
@@ -35,6 +35,8 @@ set_target_properties(dukpp
 target_include_directories(dukpp INTERFACE
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
         $<INSTALL_INTERFACE:include>)
+
+target_link_libraries(dukpp INTERFACE ${DUKTAPE_LIBRARIES})
 
 if (DUKPP_ENABLE_INSTALL)
     install(TARGETS dukpp
