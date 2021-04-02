@@ -193,7 +193,8 @@ namespace dukpp {
             return mString.data();
         }
 
-        std::vector<duk_value> as_array() const;
+        template<typename T = duk_value>
+        std::vector<T> as_array() const;
 
         std::map<std::string, duk_value> as_map() const;
 

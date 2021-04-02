@@ -184,8 +184,9 @@ namespace dukpp {
         }
     }
 
-    std::vector<duk_value> duk_value::as_array() const {
-        std::vector<duk_value> vec;
+    template<typename T>
+    std::vector<T> duk_value::as_array() const {
+        std::vector<T> vec;
 
         if (mType != Type::Object) {
             throw duk_exception() << "Expected array, got " << type_name();
@@ -207,7 +208,7 @@ namespace dukpp {
 
         for (duk_size_t i = 0; i < len; i++) {
             duk_get_prop_index(mContext, -1, i);
-            vec.push_back(types::DukType<typename types::Bare<duk_value>::type>
+            vec.push_back(types::DukType<typename types::Bare<T>::type>
                           ::template read<duk_value>(mContext, elem_idx));
             duk_pop(mContext);
         }
